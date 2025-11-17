@@ -8,6 +8,7 @@ A Telegram bot that generates shareable deep-links for files and media forwarded
 - 📁 Support for all file and media types
 - 🔒 No "Forwarded from..." attribution when sharing
 - ⏱ Automatic cleanup of expired links (7 days default)
+ - ⏱ Automatic cleanup of expired links (disabled by default; links never expire)
 - 💾 SQLite database for persistence
 - 📊 Track link usage statistics
 - ❌ Comprehensive error handling
@@ -37,6 +38,16 @@ Set these in Replit Secrets or in a `.env` file:
 | `BOT_USERNAME` | Your bot's username (without @) | No | smxfilesbot |
 | `TOKEN_TTL_DAYS` | Days before links expire | No | 7 |
 
+If you prefer to store environment variables in a file while developing locally, copy the included example:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and replace the placeholder values (do NOT commit your real `.env`).
+
+When deploying to Render, set the same variables through the Render dashboard's Environment section (do not upload a `.env` file to the repo).
+
 ### Installation
 
 1. Install dependencies:
@@ -48,6 +59,7 @@ pip install -r requirements.txt
    - Click "Secrets" in the left sidebar
    - Add `BOT_TOKEN` with your bot token
    - Optionally add `BOT_USERNAME` and `TOKEN_TTL_DAYS`
+    - Optionally add `BOT_USERNAME`. `TOKEN_TTL_DAYS` is optional — set to a positive integer to enable automatic expiry. Set to `0` (the default) to keep links indefinitely.
 
 3. Run the bot:
 ```bash
@@ -81,6 +93,7 @@ Bot: ✅ Link created successfully!
 
      ⏱ Valid for 7 days
      📊 Uses: Unlimited
+
 
 User: [Shares link with friend]
 

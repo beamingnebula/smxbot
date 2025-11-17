@@ -1,7 +1,6 @@
-python-telegram-bot==20.7
+
+# Use the job-queue extra so periodic cleanup scheduling works
+python-telegram-bot[job-queue]==20.7
 aiosqlite==0.19.0
 python-dotenv==1.0.0
-aiosqlite
-python-dotenv
 python-telegram-bot
-telegram

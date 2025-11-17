@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 BOT_USERNAME = os.getenv('BOT_USERNAME', 'smxfilesbot')
-TOKEN_TTL_DAYS = int(os.getenv('TOKEN_TTL_DAYS', '7'))
+# Set to 0 to disable automatic expiration (links will never expire)
+TOKEN_TTL_DAYS = int(os.getenv('TOKEN_TTL_DAYS', '0'))
 DB_PATH = 'file_links.db'
 
 
@@ -92,8 +93,13 @@ async def get_link(token: str) -> Optional[Tuple[int, int]]:
 
 async def cleanup_old_tokens():
     """Delete tokens older than TOKEN_TTL_DAYS."""
+    # If TTL is disabled (<= 0), skip cleanup and keep links indefinitely
+    if TOKEN_TTL_DAYS <= 0:
+        logger.debug("TOKEN_TTL_DAYS <= 0; skipping cleanup (links do not expire)")
+        return
+
     cutoff_date = (datetime.utcnow() - timedelta(days=TOKEN_TTL_DAYS)).isoformat()
-    
+
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute(
             'DELETE FROM file_links WHERE created_at < ?',
@@ -101,7 +107,7 @@ async def cleanup_old_tokens():
         )
         deleted_count = cursor.rowcount
         await db.commit()
-    
+
     if deleted_count > 0:
         logger.info(f"Cleaned up {deleted_count} expired tokens")
 
@@ -120,12 +126,12 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not args:
         await update.message.reply_text(
-            "👋 Welcome to the File Link Bot!\n\n"
-            "📝 How to use:\n"
-            "1. Forward a file or media from a Telegram channel to me\n"
-            "2. I'll generate a shareable link for you\n"
-            "3. Anyone with the link can access the file without seeing the original channel\n\n"
-            "🔗 Links never expire!"
+            "👋 Welcome to the SMXFLIX Bot!\n\n"
+            "📝Thankyou for using SMXFLIX\n"
+            "1. Don't misuse the files\n"
+            "2. Be responisble\n"
+            "3. SMXFLIX is not responisble\n\n"
+            "And never claim any ownership over the files"
         )
         return
     
@@ -145,7 +151,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     try:
         await context.bot.copy_message(
-            chat_id=update.message.chat_id,
+            chat_id=update.effective_chat.id,
             from_chat_id=from_chat_id,
             message_id=from_message_id
         )
@@ -233,6 +239,14 @@ def main():
         filters.FORWARDED & ~filters.COMMAND,
         handle_forwarded_message
     ))
+    # Schedule periodic cleanup every hour (only if JobQueue is available)
+    try:
+        if getattr(application, 'job_queue', None):
+            application.job_queue.run_repeating(periodic_cleanup, interval=3600, first=3600)
+        else:
+            logger.info("JobQueue not available; skipping periodic cleanup scheduling")
+    except Exception:
+        logger.exception("Failed to schedule periodic cleanup job")
     
     logger.info("Bot is starting...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
