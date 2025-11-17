@@ -48,6 +48,16 @@ Then edit `.env` and replace the placeholder values (do NOT commit your real `.e
 
 When deploying to Render, set the same variables through the Render dashboard's Environment section (do not upload a `.env` file to the repo).
 
+### Render runtime pin
+
+Render may select a newer Python version by default. `python-telegram-bot==20.7` is not compatible with Python 3.13; to avoid runtime errors pin a supported Python version by adding a `runtime.txt` file at the repo root (example already included):
+
+```
+python-3.11.4
+```
+
+After adding `runtime.txt` re-deploy the service on Render so the correct Python runtime is used.
+
 ### Installation
 
 1. Install dependencies:
